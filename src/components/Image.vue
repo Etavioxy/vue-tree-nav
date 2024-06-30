@@ -18,7 +18,7 @@ onMounted(() => {
 
 <style scoped>
 .img-box {
-  width: 100%;
+  /* width: 100%; */
   /* height = width */
   aspect-ratio: 1;
   margin: 0.5em;
@@ -30,6 +30,7 @@ onMounted(() => {
 }
 img {
   max-width: 100%;
+  min-width: 50px;
   height: auto;
 }
 </style>

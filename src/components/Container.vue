@@ -1,12 +1,12 @@
 <template>
   <div ref="containerRef" class="container">
-    <Item id="myDiv"
+    <!-- <Item id="myDiv"
       :class="{fullscreen: isFullscreen}"
       @click="isFullscreen = !isFullscreen"
       :data="items[0]"
     >
       {{items[0].name}}
-    </Item>
+    </Item> -->
     <Item
       v-for="(item, index) in items"
       :key="index"

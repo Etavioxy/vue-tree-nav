@@ -2,6 +2,8 @@
 import Container from './components/Container.vue'
 import png from './3m7.png';
 
+import testContainer from './components/testContainer.vue'
+
 const items = [
   { name:'Item 1', src: png },
   { name:'Item 2', src: png },
@@ -13,6 +15,9 @@ const items = [
 </script>
 
 <template>
+  <div style="padding: 1em;">
+    <testContainer/>
+  </div>
   <Container :items="items" />
 </template>
 
