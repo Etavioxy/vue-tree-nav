@@ -1,17 +1,16 @@
 <template>
-  <div>
     <pre>{{ show }}</pre>
-    <div class="container" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)` }">
-      <div class="item" v-for="item in items" :key="item.id" :ref="setItemEle"
-        @click="show = getinfo(itemEles[item.id])"
-      >
-        {{ item.name }}
-      </div>
+  <div class="container" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)` }">
+    <div class="item" v-for="item in items" :key="item.id"
+       :ref="setItemEle"
+      @click="show = getinfo(itemEles[item.id])"
+    >
+      {{ item.name }}
     </div>
-    <div class="controls">
-      <label>每行元素数量:</label>
-      <input type="number" v-model.number="columns" min="1" max="10" />
-    </div>
+  </div>
+  <div class="controls">
+    <label>每行元素数量:</label>
+    <input type="number" v-model.number="columns" min="1" max="10" />
   </div>
 </template>
 

@@ -5,10 +5,14 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import Image from './Image.vue';
 
-const props = defineProps(['data']);
+interface Props {
+  data: any;
+}
+
+const props = defineProps<Props>();
 
 </script>
 

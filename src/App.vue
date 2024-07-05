@@ -3,22 +3,22 @@ import Container from './components/Container.vue'
 import png from './3m7.png';
 
 import testContainer from './components/testContainer.vue'
+import { reactive } from 'vue';
 
-const items = [
+const items = reactive([
   { name:'Item 1', src: png },
   { name:'Item 2', src: png },
   { name:'Item 3', src: png },
   { name:'Item 4', src: png },
   { name:'Item 5', src: png },
-];
+]);
 
 </script>
 
 <template>
   <div style="padding: 1em;">
-    <testContainer/>
+    <Container :min-item-width="120" :items="items" />
   </div>
-  <Container :items="items" />
 </template>
 
 <style scoped>

@@ -1,79 +1,110 @@
 <template>
-  <div ref="containerRef" class="container">
-    <!-- <Item id="myDiv"
-      :class="{fullscreen: isFullscreen}"
+  <div ref="containerRef" class="container" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)` }">
+    <Item class="head-item"
+      :class="{fullscreen: isFullscreen, docked: isDocked}"
       @click="isFullscreen = !isFullscreen"
       :data="items[0]"
     >
       {{items[0].name}}
-    </Item> -->
-    <Item
+    </Item>
+    <div
       v-for="(item, index) in items"
       :key="index"
-      :data="item"
+      :ref="setItemEle"
+      @click="show = getinfo(itemEles[index])"
     >
-      {{ item.name }}
-    </Item>
+      <Item :data="item" >
+        {{ item.name }}
+      </Item>
+    </div>
   </div>
+  <div class="controls">
+    <label>每行元素数量:</label>
+    <input type="range" v-model="columns" min="1" :max="maxItemCount" />
+    <label>{{columns}} / {{maxItemCount}}</label>
+  </div>
+  <pre>{{ show }}</pre>
 </template>
 
-<script setup>
-import {ref, computed, onMounted} from 'vue';
+<script lang="ts" setup>
+import {ref, computed, onMounted, toRaw, reactive} from 'vue';
 import Item from './Item.vue';
 
+let itemEles: HTMLElement[] = [];
+function setItemEle(el: any){
+  // get el html dom element
+  itemEles.push(el);
+}
+
+function getinfo(el: HTMLElement) {
+  // more position info
+  let pa = el.parentNode as HTMLElement;
+  return ' '+el.offsetWidth+' x '+el.offsetHeight
+  +' \n'+el.offsetLeft+' x '+el.offsetTop
+  +' \n'+el.getBoundingClientRect().left+' x '+el.getBoundingClientRect().top
+  +' \n'+pa.offsetLeft+' x '+pa.offsetTop
+  +' \n'+el.clientLeft+' x '+el.clientTop
+  +' \n'+el.scrollLeft+' x '+el.scrollTop
+}
+
+let show = ref('');
+
+let columns = ref(4);
+
 let isFullscreen = ref(false)
+let isDocked = ref(true);
 
-const props = defineProps({
-        minItemWidth: {
-          type: Number,
-          default: 200
-        },
-        minItemHeight: {
-          type: Number,
-          default: 200
-        },
-        items: {
-          type: Array,
-          required: true
-        }
-      })
+interface Props {
+  minItemWidth: number,
+  items: any[]
+}
 
-const containerRef = ref(null);
+const props = defineProps<Props>();
 
-onMounted(() => {
-  console.log('Container width:', containerRef.value.offsetWidth)
+const items = reactive(props.items);
 
-  const itemsPerRow = computed(() => {
-    return Math.floor(containerRef.value.offsetWidth / props.minItemWidth)
-  })
-  const itemWidth = computed(() => {
-    return containerRef.value.offsetWidth / itemsPerRow.value
-  })
-  const itemHeight = computed(() => {
-    return props.minItemHeight
-  })
-})
+const containerRef = ref<InstanceType<typeof HTMLElement>>();
+
+let maxItemCount = ref(10);
+
+onMounted(()=>{
+  if( containerRef.value !== undefined )
+  maxItemCount.value = Math.floor(containerRef.value.offsetWidth / props.minItemWidth);
+});
+
 </script>
   
 <style scoped>
 .container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-items: flex-start;
+  display: grid;
+  /* grid-template-columns: repeat(4, 1fr); */
+  grid-gap: 5px;
+  background-color: #533;
+  position: relative;
+  height: 80vh;
+  overflow-y: scroll;
 }
 
-#myDiv{
+.head-item{
   background:#c99;
     top: 100px;
     left: 100px;
-    position: fixed; 
+    position: absolute; 
     width: 300px; 
     height: 300px; 
     transition: all 1s ease;
 }
 
-#myDiv.fullscreen{
+.head-item.docked{
+    top: 0;
+    left: 0;
+    position: absolute; 
+    width: 120px; 
+    height: 100%; 
+    transition: all 1s ease;
+}
+
+.head-item.fullscreen{
     z-index: 9999; 
     top: 0;
     left: 0;

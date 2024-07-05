@@ -4,16 +4,15 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 
-let props = defineProps(['src']);
+interface Props {
+  src: string;
+}
 
-const imageRef = ref(null);
+let props = defineProps<Props>();
 
-onMounted(() => {
-  //console.log('Image width:', imageRef.value.width)
-})
 </script>
 
 <style scoped>
@@ -21,6 +20,8 @@ onMounted(() => {
   /* width: 100%; */
   /* height = width */
   aspect-ratio: 1;
+  max-width: 100%;
+  max-height: 100%;
   margin: 0.5em;
   overflow: hidden;
   border-radius: 0.5em;
