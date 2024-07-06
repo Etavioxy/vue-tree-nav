@@ -1,5 +1,5 @@
 <template>
-  <div class="item">
+  <div class="item" :style="{backgroundColor: color}">
     <Image :src="data.src"/>
     <slot></slot>
   </div>
@@ -10,6 +10,7 @@ import Image from './Image.vue';
 
 interface Props {
   data: any;
+  color?: string;
 }
 
 const props = defineProps<Props>();

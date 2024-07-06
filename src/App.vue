@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import Container from './components/Container.vue'
 import png from './3m7.png';
+import { Item } from './type.ts';
 
 import { reactive } from 'vue';
-
-interface Item {
-  name: string,
-  src: string,
-  children?: Item[]
-}
 
 const items = reactive([
   { name:'Item 1', src: png },

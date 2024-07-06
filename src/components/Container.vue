@@ -1,28 +1,30 @@
 <template>
   <div ref="containerRef" class="container" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)` }">
-    <div
-      v-for="(item, index) in headItems"
-      class="head-item"
-      :style="{
-        top: item.pos.x + 'px',
-        left: item.pos.y + 'px',
-      }"
-      :class="{fullscreen: isFullscreen, docked: isDocked}"
-      @click="isFullscreen = !isFullscreen"
+    <TransitionGroup name="head-item-trans"
+      @before-enter="onBeforeEnter"
+      @enter="onEnter"
+      @leave="onLeave"
+      @after-leave="onAfterLeave"
     >
-      <Item :data="item" >
-        {{ item.name }}
-      </Item>
-    </div>
+      <div
+        v-for="(item, index) in headItems"
+        :key="index"
+        class="head-item"
+        @click="popHeadItem(index)"
+      >
+        <ItemComponent :data="item" color="red" >
+          {{ item.name }}
+        </ItemComponent>
+      </div>
+    </TransitionGroup>
     <div
       v-for="(item, index) in items"
-      :key="index"
       :ref="setItemEle"
-      @click="show = getinfo(itemEles[index])"
+      @click="enterItem(itemEles[index], item)"
     >
-      <Item :data="item" >
+      <ItemComponent :data="item" >
         {{ item.name }}
-      </Item>
+      </ItemComponent>
     </div>
   </div>
   <div class="controls">
@@ -34,21 +36,22 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, onMounted, toRaw, reactive, onBeforeUpdate, onUpdated} from 'vue';
-import Item from './Item.vue';
+import {ref, computed, onMounted, toRaw, reactive, onBeforeUpdate, onUpdated, watch} from 'vue';
+import ItemComponent from './Item.vue';
 
 // https://www.vueframework.com/docs/v3/cn/guide/migration/array-refs.html
 let itemEles: HTMLElement[] = [];
+
 function setItemEle(el: any){
-  // get el html dom element
   itemEles.push(el);
 }
 onBeforeUpdate(()=>{
   itemEles = [];
 });
-onUpdated(()=>{
-  console.log(itemEles);
-});
+
+let headItemOriginalStyle = ref<any>({ color: 'black' });
+
+let show = ref('');
 
 function getinfo(el: HTMLElement) {
   // more position info
@@ -61,30 +64,108 @@ function getinfo(el: HTMLElement) {
   //+' \n'+'在视窗的位置'+el.scrollLeft+' x '+el.scrollTop
 }
 
-let show = ref('');
+import type { Item } from '../type.ts';
 
-let columns = ref(4);
+interface HeadItem extends Item {
+  pos: {
+    x: number,
+    y: number,
+    h: number,
+    w: number,
+  }
+}
 
-let isFullscreen = ref(false)
-let isDocked = ref(true);
+const headItems = reactive<HeadItem[]>([]);
+
+let nowTransitionItem: HeadItem | null = null;
+let nowTransitionElement: Element = document.createElement('div');
+
+function enterItem(el: HTMLElement, item: Item) {
+  show.value = getinfo(el);
+  const newHeadItem = {
+    ...item,
+    pos: {
+      x: el.offsetTop,
+      y: el.offsetLeft,
+      h: el.offsetHeight,
+      w: el.offsetWidth,
+    },
+//let isFullscreen = ref(false)
+//let isDocked = ref(true);
+  };
+  nowTransitionItem = newHeadItem;
+  headItems.push(newHeadItem);
+  //headItemOriginalStyle.value = {
+  //  top: newHeadItem.pos.x + 'px',
+  //  left: newHeadItem.pos.y + 'px',
+  //  height: newHeadItem.pos.h + 'px',
+  //  width: newHeadItem.pos.w + 'px',
+  //};
+}
+function popHeadItem(index: number){
+  if( index == headItems.length - 1 ){
+    nowTransitionItem = headItems[index];
+    headItems.pop();
+  }
+}
+
+function getStyle(headItem: HeadItem){
+  return {
+    top: headItem.pos.x + 'px',
+    left: headItem.pos.y + 'px',
+    height: headItem.pos.h + 'px',
+    width: headItem.pos.w + 'px',
+  };
+}
+
+watch(headItemOriginalStyle, (newStyle, oldStyle) => {
+  for( let key in oldStyle ) nowTransitionElement.style[key] = null;
+  for( let key in newStyle ) nowTransitionElement.style[key] = newStyle[key];
+})
+
+const logRaw = (x: any) => JSON.parse(JSON.stringify(toRaw(x)));
+
+//https://cn.vuejs.org/guide/built-ins/transition.html
+function onBeforeEnter(el: Element) {
+  console.log('onBeforeEnter', el, logRaw(headItems));
+  nowTransitionElement = el;
+  headItemOriginalStyle.value = getStyle(nowTransitionItem as HeadItem);
+}
+
+function onEnter(el: Element) {
+  console.log('onEnter', el, logRaw(headItems));
+  setTimeout(()=>{headItemOriginalStyle.value = {}}, 0);
+}
+
+function onLeave(el: Element) {
+  console.log('onLeave', el, logRaw(headItems));
+  nowTransitionElement = el;
+  headItemOriginalStyle.value = getStyle(nowTransitionItem as HeadItem);
+}
+
+function onAfterLeave(el: Element) {
+  console.log('onAfterLeave', el, logRaw(headItems));
+  headItemOriginalStyle.value = {};
+} 
 
 interface Props {
   minItemWidth: number,
   items: any[]
 }
 
+const columns = ref(4);
+
 const props = defineProps<Props>();
 
 const items = reactive(props.items);
-const headItems = reactive([]);
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
 
-let maxItemCount = ref(10);
+const maxItemCount = ref(20);
 
 onMounted(()=>{
   if( containerRef.value !== undefined )
-  maxItemCount.value = Math.floor(containerRef.value.offsetWidth / props.minItemWidth);
+    maxItemCount.value = Math.floor(containerRef.value.offsetWidth / props.minItemWidth);
 });
 
 </script>
@@ -101,15 +182,15 @@ onMounted(()=>{
 
 .head-item{
   background:#c99;
-    top: 100px;
-    left: 100px;
-    position: absolute; 
-    width: 300px; 
-    height: 300px; 
-    transition: all 1s ease;
+  position: absolute; 
+  z-index: 9999; 
+  top: 0;
+  left: 0;
+  width: 100%; 
+  height: 100%; 
 }
 
-.head-item.docked{
+/* .head-item.docked{
     top: 0;
     left: 0;
     position: absolute; 
@@ -124,7 +205,14 @@ onMounted(()=>{
     left: 0;
     width: 100%; 
     height: 100%; 
-    transition: all 1s ease;
+} */
+          
+.head-item-trans-enter-active,
+.head-item-trans-leave-active {
+  transition: all 0.5s ease;
+}
+.head-item-trans-enter-from,
+.head-item-trans-leave-to {
 }
 
 </style>
