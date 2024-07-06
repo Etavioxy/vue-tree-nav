@@ -2,16 +2,39 @@
 import Container from './components/Container.vue'
 import png from './3m7.png';
 
-import testContainer from './components/testContainer.vue'
 import { reactive } from 'vue';
+
+interface Item {
+  name: string,
+  src: string,
+  children?: Item[]
+}
 
 const items = reactive([
   { name:'Item 1', src: png },
-  { name:'Item 2', src: png },
-  { name:'Item 3', src: png },
+  {
+    name:'Item 2', src: png,
+    children: [
+      { name:'Item 2-1', src: png },
+      { name:'Item 2-2', src: png },
+      { name:'Item 2-3', src: png },
+      { name:'Item 2-4', src: png },
+      { name:'Item 2-5', src: png },
+      { name:'Item 2-6', src: png },
+    ]
+  },
+  {
+    name:'Item 3', src: png,
+    children: [
+      { name:'Item 3-1', src: png },
+      { name:'Item 3-2', src: png },
+      { name:'Item 3-3', src: png },
+      { name:'Item 3-4', src: png },
+    ]
+  },
   { name:'Item 4', src: png },
   { name:'Item 5', src: png },
-]);
+] as Item[]);
 
 </script>
 
@@ -21,7 +44,12 @@ const items = reactive([
   </div>
 </template>
 
-<style scoped>
+<style>
+
+.container {
+  height: 75vh;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

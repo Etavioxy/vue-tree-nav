@@ -1,12 +1,19 @@
 <template>
   <div ref="containerRef" class="container" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)` }">
-    <Item class="head-item"
+    <div
+      v-for="(item, index) in headItems"
+      class="head-item"
+      :style="{
+        top: item.pos.x + 'px',
+        left: item.pos.y + 'px',
+      }"
       :class="{fullscreen: isFullscreen, docked: isDocked}"
       @click="isFullscreen = !isFullscreen"
-      :data="items[0]"
     >
-      {{items[0].name}}
-    </Item>
+      <Item :data="item" >
+        {{ item.name }}
+      </Item>
+    </div>
     <div
       v-for="(item, index) in items"
       :key="index"
@@ -27,24 +34,31 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, onMounted, toRaw, reactive} from 'vue';
+import {ref, computed, onMounted, toRaw, reactive, onBeforeUpdate, onUpdated} from 'vue';
 import Item from './Item.vue';
 
+// https://www.vueframework.com/docs/v3/cn/guide/migration/array-refs.html
 let itemEles: HTMLElement[] = [];
 function setItemEle(el: any){
   // get el html dom element
   itemEles.push(el);
 }
+onBeforeUpdate(()=>{
+  itemEles = [];
+});
+onUpdated(()=>{
+  console.log(itemEles);
+});
 
 function getinfo(el: HTMLElement) {
   // more position info
   let pa = el.parentNode as HTMLElement;
-  return ' '+el.offsetWidth+' x '+el.offsetHeight
-  +' \n'+el.offsetLeft+' x '+el.offsetTop
-  +' \n'+el.getBoundingClientRect().left+' x '+el.getBoundingClientRect().top
-  +' \n'+pa.offsetLeft+' x '+pa.offsetTop
-  +' \n'+el.clientLeft+' x '+el.clientTop
-  +' \n'+el.scrollLeft+' x '+el.scrollTop
+  return '长宽'+el.offsetWidth+' x '+el.offsetHeight
+  +' \n'+'在container的位置'+el.offsetLeft+' x '+el.offsetTop
+  +' \n'+'在视窗的位置'+el.getBoundingClientRect().left+' x '+el.getBoundingClientRect().top
+  +' \n'+'container的位置'+pa.offsetLeft+' x '+pa.offsetTop
+  //+' \n'+'在视窗的位置'+el.clientLeft+' x '+el.clientTop
+  //+' \n'+'在视窗的位置'+el.scrollLeft+' x '+el.scrollTop
 }
 
 let show = ref('');
@@ -62,6 +76,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const items = reactive(props.items);
+const headItems = reactive([]);
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
 
@@ -81,7 +96,6 @@ onMounted(()=>{
   grid-gap: 5px;
   background-color: #533;
   position: relative;
-  height: 80vh;
   overflow-y: scroll;
 }
 
