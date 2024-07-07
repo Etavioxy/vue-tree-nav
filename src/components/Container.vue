@@ -1,30 +1,35 @@
 <template>
-  <div ref="containerRef" class="container" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)` }">
-    <TransitionGroup name="head-item-trans"
-      @before-enter="onBeforeEnter"
-      @enter="onEnter"
-      @leave="onLeave"
-      @after-leave="onAfterLeave"
-    >
-      <div
-        v-for="(item, index) in headItems"
-        :key="index"
-        class="head-item"
-        @click="popHeadItem(index)"
+  <div ref="containerRef" class="container">
+    <div class="container-head" :style="{width: minItemWidth + 'px'}">
+      <TransitionGroup name="head-item-trans"
+        @before-enter="onBeforeEnter"
+        @enter="onEnter"
+        @leave="onLeave"
+        @after-leave="onAfterLeave"
       >
-        <ItemComponent :data="item" color="red" >
+        <div
+          v-for="(item, index) in headItems"
+          :key="index"
+          class="head-item"
+          @click="popHeadItem(index)"
+        >
+          <ItemComponent :data="item" color="red" >
+            {{ item.name }}
+          </ItemComponent>
+        </div>
+      </TransitionGroup>
+    </div>
+
+    <div class="container-grid" ref="containerGridRef" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)` }">
+      <div
+        v-for="(item, index) in items"
+        :ref="setItemEle"
+        @click="enterItem(itemEles[index], item)"
+      >
+        <ItemComponent :data="item" >
           {{ item.name }}
         </ItemComponent>
       </div>
-    </TransitionGroup>
-    <div
-      v-for="(item, index) in items"
-      :ref="setItemEle"
-      @click="enterItem(itemEles[index], item)"
-    >
-      <ItemComponent :data="item" >
-        {{ item.name }}
-      </ItemComponent>
     </div>
   </div>
   <div class="controls">
@@ -39,6 +44,13 @@
 import {ref, computed, onMounted, toRaw, reactive, onBeforeUpdate, onUpdated, watch} from 'vue';
 import ItemComponent from './Item.vue';
 
+interface Props {
+  minItemWidth: number,
+  items: any[]
+}
+
+const props = defineProps<Props>();
+
 // https://www.vueframework.com/docs/v3/cn/guide/migration/array-refs.html
 let itemEles: HTMLElement[] = [];
 
@@ -51,6 +63,8 @@ onBeforeUpdate(()=>{
 
 let headItemOriginalStyle = ref<any>({ color: 'black' });
 
+const containerGridRef = ref<InstanceType<typeof HTMLElement>>();
+
 let show = ref('');
 
 function getinfo(el: HTMLElement) {
@@ -61,7 +75,7 @@ function getinfo(el: HTMLElement) {
   +' \n'+'在视窗的位置'+el.getBoundingClientRect().left+' x '+el.getBoundingClientRect().top
   +' \n'+'container的位置'+pa.offsetLeft+' x '+pa.offsetTop
   //+' \n'+'在视窗的位置'+el.clientLeft+' x '+el.clientTop
-  //+' \n'+'在视窗的位置'+el.scrollLeft+' x '+el.scrollTop
+  +' \n'+'滚动条的位置'+pa.scrollLeft+' x '+pa.scrollTop
 }
 
 import type { Item } from '../type.ts';
@@ -110,9 +124,10 @@ function popHeadItem(index: number){
 }
 
 function getStyle(headItem: HeadItem){
+  console.log(containerGridRef.value)
   return {
-    top: headItem.pos.x + 'px',
-    left: headItem.pos.y + 'px',
+    top: headItem.pos.x - containerGridRef.value?.scrollTop + 'px',
+    left: headItem.pos.y + props.minItemWidth + 5 - containerGridRef.value?.scrollLeft + 'px',
     height: headItem.pos.h + 'px',
     width: headItem.pos.w + 'px',
   };
@@ -130,6 +145,7 @@ function onBeforeEnter(el: Element) {
   console.log('onBeforeEnter', el, logRaw(headItems));
   nowTransitionElement = el;
   headItemOriginalStyle.value = getStyle(nowTransitionItem as HeadItem);
+  console.log(headItemOriginalStyle.value);
 }
 
 function onEnter(el: Element) {
@@ -148,16 +164,18 @@ function onAfterLeave(el: Element) {
   headItemOriginalStyle.value = {};
 } 
 
-interface Props {
-  minItemWidth: number,
-  items: any[]
-}
-
 const columns = ref(4);
 
-const props = defineProps<Props>();
+const items = ref(props.items);
 
-const items = reactive(props.items);
+watch(headItems, (newItems, oldItems) => {
+  console.log('headItems', newItems, oldItems);
+  if( newItems.length == 0 ){
+    items.value = props.items;
+    return;
+  }
+  items.value = headItems[headItems.length - 1].children as Item[];
+})
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
 
@@ -172,12 +190,24 @@ onMounted(()=>{
   
 <style scoped>
 .container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  overflow: hidden;
+}
+.container-head {
+  background-color: #333;
+  position: relative;
+}
+
+.container-grid {
   display: grid;
-  /* grid-template-columns: repeat(4, 1fr); */
   grid-gap: 5px;
   background-color: #533;
   position: relative;
   overflow-y: scroll;
+  flex: 1 1 0;
+  height: 100%;
 }
 
 .head-item{
@@ -213,6 +243,7 @@ onMounted(()=>{
 }
 .head-item-trans-enter-from,
 .head-item-trans-leave-to {
+  /* see in JS API */
 }
 
 </style>

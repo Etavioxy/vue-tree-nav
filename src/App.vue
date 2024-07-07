@@ -43,6 +43,7 @@ const items = reactive([
 
 .container {
   height: 75vh;
+  width: 100%;
 }
 
 .logo {

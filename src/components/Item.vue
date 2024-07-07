@@ -19,7 +19,8 @@ const props = defineProps<Props>();
 
 <style>
 .item {
-  flex: 1 1 0;
+  height: 100%;
+  width: 100%;
   box-sizing: border-box;
   padding: 10px;
   background-color: #101010;
